@@ -16,7 +16,7 @@ ticker(simulator_pid) ->
 	after 100 ->
 		simulator_pid ! tick
 	end,
-	simulator:ticker(simulator_pid).
+	ticker(simulator_pid).
 
 
 %The simulator loop, recieves events from clients and ticks and updates the game state.
@@ -25,5 +25,5 @@ loop() ->
 		tick ->
 			io:format("got tick")
 	end,
-	simulator:loop().
+	loop().
 
