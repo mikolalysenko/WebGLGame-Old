@@ -1,0 +1,16 @@
+<html>
+<body>
+
+<script type="text/javascript">
+function sendMessage(msg)
+{
+	xmlhttp = new XMLHttpRequest();
+	xmlhttp.open("GET", "ajax.yaws?msg="+msg, true);
+	xmlhttp.send();
+}
+</script>
+
+<button type="button" onclick="sendMessage('test');">Send a test message</button>
+
+</body>
+</html>
