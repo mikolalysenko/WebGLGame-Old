@@ -1,5 +1,0 @@
-<erl>
-%The event dispatcher.  This recieve AJAX events from the client, translates them into game input events and also replicates messages from the server.
-out(A) ->
-	io:format("got message\n").
-</erl>
