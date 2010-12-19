@@ -1,4 +1,4 @@
 
 all:
-	erlc -Isrc -oebin src/*.erl 
+	erlc -Isrc -osrc src/*.erl 
 

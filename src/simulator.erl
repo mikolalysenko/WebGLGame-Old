@@ -1,29 +1,29 @@
 %This module is the main game loop.
 -module(simulator).
--export([start/0]).
+-compile(export_all).
 
 start() ->
 	%Spawn the simulator
-	simulator_pid = spawn(?MODULE, loop, []),
-	global:register_name("simulator", simulator_pid),
+	Pid = spawn(?MODULE, loop, []),
 	
 	%Spawn the ticker
-	ticker_pid = spawn(?MODULE, ticker, [simulator_pid]).
+	spawn(?MODULE, ticker, [Pid]),
+	Pid.
 
 %The timer process, just sends a tick event every 100ms
-ticker(simulator_pid) ->
+ticker(Pid) ->
 	receive
 	after 100 ->
-		simulator_pid ! tick
+		Pid ! tick
 	end,
-	ticker(simulator_pid).
+	ticker(Pid).
 
 
 %The simulator loop, recieves events from clients and ticks and updates the game state.
 loop() ->
 	receive 
 		tick ->
-			io:format("got tick")
+			io:format("got tick\n")
 	end,
 	loop().
 
