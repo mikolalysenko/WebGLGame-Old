@@ -2,9 +2,11 @@
 -module(simulator).
 -compile(export_all).
 
+
 start() ->
 	%Spawn the simulator
 	Pid = spawn(?MODULE, loop, []),
+	register(sim_pid, Pid),
 	
 	%Spawn the ticker
 	spawn(?MODULE, ticker, [Pid]),
@@ -13,7 +15,7 @@ start() ->
 %The timer process, just sends a tick event every 100ms
 ticker(Pid) ->
 	receive
-	after 100 ->
+	after 500 ->
 		Pid ! tick
 	end,
 	ticker(Pid).
@@ -23,7 +25,9 @@ ticker(Pid) ->
 loop() ->
 	receive 
 		tick ->
-			io:format("got tick\n")
+			io:format("Got tick\n");
+		{move, ClientId} ->
+			io:format("Got move event\n")
 	end,
 	loop().
 

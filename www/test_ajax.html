@@ -2,12 +2,27 @@
 <body>
 
 <script type="text/javascript">
-function sendMessage(msg)
+
+//This function decodes a state update from the server
+function processUpdate(delta_state)
+{
+}
+
+//This function pushes an event to the server.
+//When it completes, it updates the state using the response.
+function pushEvent(event)
 {
 	xmlhttp = new XMLHttpRequest();
-	xmlhttp.open("GET", "d/?m="+msg, true);
+	xmlhttp.open("GET", "d/" + event, true);
+	xmlhttp.onreadystatechange = function()
+	{
+		if(xmlhttp.readyState == 4)
+			processUpdate(xmlhttp.responseText);
+	}
 	xmlhttp.send();
 }
+
+
 </script>
 
 <button type="button" onclick="sendMessage('test');">Send a test message</button>
