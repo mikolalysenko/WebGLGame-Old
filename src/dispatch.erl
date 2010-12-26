@@ -15,7 +15,7 @@ process_action(ClientID, A) ->
 	case A#arg.appmod of
 		%Heartbeat / do nothing action.  Resets timeout counter
 		"/t" -> 
-			[];
+			sim_pid ! {heartbeat, self(), ClientID};
 		
 		%Chat command
 		% Path = c
@@ -26,18 +26,24 @@ process_action(ClientID, A) ->
 				{ok, Message} ->
 					case queryvar(A, "t") of
 						{ok, Target} ->
-							sim_pid ! {priv_msg, ClientID, Target, Message};
+							sim_pid ! {chat, self(), ClientID, Target, Message};
 						undefined ->
-							sim_pid ! {chat, ClientID, Message}
+							sim_pid ! {chat, self(), ClientID, global_chat, Message}
 					end;
 				undefined ->
 					[].
-			end
+			end;
+			
+		%Log out command
+		"/l" ->
+			sim_pid ! {logout, self(), ClientID}
 	end.
-	
-update_client_state(ClientID) ->
+
+%Translates and pushes updates out to the client	
+update_client_state(Data) ->
 	[html, ""].
 
+%Default dispatch code
 out(A) ->
 	H = A#arg.headers,
 	C = H#headers.cookie,
@@ -47,6 +53,8 @@ out(A) ->
 			handle_login(A);
 		{true, ClientID} ->
 			process_action(ClientID, A),
-			update_client_state(ClientID)
+			receive
+				{event_list, Data} -> update_client_state(Data)
+			end
 	end.
 
