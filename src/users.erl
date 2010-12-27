@@ -8,23 +8,32 @@
 %Client login info
 -record(login, {name, password}).
 
-%Initialize the login schema
-create_login_schema() ->
+%Initialize the login tables
+create_login_tables() ->
 	mnesia:create_table(login, [
-		{attributes, record_info(fields, login_info)} ]).
+		{attributes, record_info(fields, login)} ]).
 
 %Verifies a user name/password combo
 verify_password(Name, Password) ->
-	case mnesia:read(login, Name) of
-		[] ->
-			false;
-		[ Record ] ->
-			case Record#login.password of
-				Password ->
-					true;
-				_ ->
-					false
-			end
+	T = fun() ->
+		case mnesia:read(login, Name) of
+			[] ->
+				false;
+			[ Record ] ->
+				case Record#login.password of
+					Password ->
+						true;
+					_ ->
+						false
+				end
+		end
+	end,
+	
+	case mnesia:transaction(T) of
+		{atomic, Result} ->
+			Result;
+		_ ->
+			false
 	end.
 
 %Adds a user

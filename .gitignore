@@ -2,3 +2,4 @@
 *.beam
 logs/*
 *.dump
+db/*
