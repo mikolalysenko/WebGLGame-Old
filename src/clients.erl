@@ -1,7 +1,8 @@
 -module(clients).
 -compile(export_all).
 
--include(dict).
+-import(dict).
+-import(mnesia).
 -include("chatroom.erl").
 
 %The information associated to a single client
@@ -26,8 +27,6 @@ remove_client(ClientState, Pid) ->
 register_client(ClientState, Name) ->
 	ClientState.
 
-
-
 %This is the loop associated to a particular client
 client_loop(ClientInfo, PendingEvents) ->
 	receive
@@ -39,3 +38,11 @@ client_loop(ClientInfo, PendingEvents) ->
 		after 60000 ->
 			timeout
 	end.
+	
+	
+
+
+start_login_server() ->
+	ok.
+	
+

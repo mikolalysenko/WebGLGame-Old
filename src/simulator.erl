@@ -2,13 +2,17 @@
 -module(simulator).
 -compile(export_all).
 
--include("clients.erl").
--include("chatroom.erl").
+-import(mnesia).
 
--record{game_state, {client_data}).
+-record{game_state, { clients }).
 
 %Spawns and registers the simulator process
 start() ->
+
+	%Initialize the database
+	mnesia:start,
+	ok = mnesia:wait_for_tables([rec], 2000).
+
 	Pid = spawn(?MODULE, start_simulator, []),
 	register(sim_pid, Pid),	
 	Pid.
@@ -42,30 +46,6 @@ start_simulator() ->
 	spawn(?MODULE, ticker, [self()]),
 	sim_loop(State).
 
-
-do_login(State, DispatchPID, Name) ->
-	State.
-	
-do_logout(State, DispatchPID, ClientID) ->
-	State.
-	
-%Dispatch a chat message.  Currently, there is only private messaging and global chat
-do_chat(State, DispatchPID, ClientID, Target, Message) ->
-	Client = clients:lookup_client_by_pid(State#game_state.client_state, ClientID),
-	Name = Client#client_info.name,
-	case Target of
-		global_chat ->
-			global_chat_pid ! {message, Name, Message};
-		
-		_ ->
-			case clients:lookup_client_by_name(State#game_state.client_state, Target) of
-				not_found ->
-					Client#client_info.chat ! {message, "System", "Invalid target for chat command"};
-				TargetInfo ->
-					TargetInfo#client_info.chat !  {message, Name, Message}
-			end
-	end,
-	State.
 	
 %The simulator loop, recieves events from clients and ticks and updates the game state.
 sim_loop(State) ->
@@ -90,7 +70,7 @@ sim_loop(State) ->
 			io:format("Got chat message: ", Message),
 			sim_loop(do_chat(State, DispatchPID, ClientID, Target, Message));
 			
-		{'EXIT', FromPID, } ->
+		{'EXIT', FromPID} ->
 			{ok}
 	end.
 

@@ -1,0 +1,11 @@
+<html>
+
+<form name="input" action="register.yaws" method="POST">
+	Name: <input type="text" name="Name" /> <br/>
+	Password: <input type="password" name="Password" /> <br/>
+	<input type="button" value="Register">
+</form>
+
+
+
+</html>
