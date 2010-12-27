@@ -1,34 +1,53 @@
--module(login).
+-module(users).
+-compile(export_all).
 
 -import(application).
 -import(dict).
 -import(mnesia).
 
 %Client login info
--record(login_info, {name, password}).
+-record(login, {name, password}).
 
 %Initialize the login schema
 create_login_schema() ->
-	application:
-	ok.
-
-%Logs into the server
-login(Name, Password) ->
-	ok.
-
-%Logs a player out of the server
-logout(Name, Password) ->
-	ok.
+	mnesia:create_table(login, [
+		{attributes, record_info(fields, login_info)} ]).
 
 %Verifies a user name/password combo
 verify_password(Name, Password) ->
-	ok.
-	
+	case mnesia:read(login, Name) of
+		[] ->
+			false;
+		[ Record ] ->
+			case Record#login.password of
+				Password ->
+					true;
+				_ ->
+					false
+			end
+	end.
+
 %Adds a user
 add_user(Name, Password) ->
-	ok.
+	%The update transaction
+	T = fun() ->
+		%Check if user exists
+		U = mnesia:read(login, Name),
+		case U of
+			[] ->
+				mnesia:write(#login{
+					name = Name, 
+					password = Password}),
+				ok;
+			_ ->
+				{failure, "User already exists"}
+		end
+	end,
 	
-%Deletes a user
-delete_user(Name) ->
-	ok.
+	case mnesia:transaction(T) of
+		{atomic, Result} ->
+			Result;
+		_ ->
+			{failure, "Database error" }
+	end.
 

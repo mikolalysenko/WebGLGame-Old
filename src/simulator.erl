@@ -2,20 +2,21 @@
 -module(simulator).
 -compile(export_all).
 
+-import(application).
 -import(mnesia).
 
--record{game_state, { clients }).
+%The game state structure
+-record(game_state, { foo }).
 
 %Spawns and registers the simulator process
 start() ->
 
 	%Initialize the database
-	mnesia:start,
-	ok = mnesia:wait_for_tables([rec], 2000).
+	mnesia:start(),
+	ok = mnesia:wait_for_tables([rec], 2000),
 
-	Pid = spawn(?MODULE, start_simulator, []),
-	register(sim_pid, Pid),	
-	Pid.
+	%Spawn simulator process
+	spawn(?MODULE, start_simulator, []).
 
 %The timer process, just sends a tick event every 100ms
 ticker(Pid) ->
@@ -26,11 +27,14 @@ ticker(Pid) ->
 	ticker(Pid).
 
 %This creates the initial gamestate
-create_initial_gamestate() ->
-	#game_state{clients=dict:new()}.
+create_initial_gamestate() -> #game_state{ }.
 
 %Starts the simulator
 start_simulator() ->
+
+	%Register simulator pid
+	register(sim_pid, self()),	
+
 	%Register the exit flag
 	process_flag(trap_exit, true),
 
@@ -42,10 +46,12 @@ start_simulator() ->
 	register(global_chat_pid, GlobalChatPID),
 	link(GlobalChatPID),
 	
-	%Spawn the ticker and start the simulator loop
-	spawn(?MODULE, ticker, [self()]),
+	%Start ticking
+	spawn_link(?MODULE, ticker, [self()]),
+	
+	%Jump into the simulation loop
 	sim_loop(State).
-
+	
 	
 %The simulator loop, recieves events from clients and ticks and updates the game state.
 sim_loop(State) ->
@@ -53,24 +59,8 @@ sim_loop(State) ->
 		tick ->
 			io:format("Got tick\n"),
 			sim_loop(State);
-			
-		{login, DispatchPID, Name} ->
-			io:format("Got login: ", Name, "\n"),
-			sim_loop(do_login(State, DispatchPID, Name));
-			
-		{logout, DispatchPID, ClientID} ->
-			io:format("Got log out event"),
-			sim_loop(do_logout(State, DispatchPID, ClientID));
-			
-		{heartbeat, DispatchPID, ClientID} ->
-			ClientID ! {heartbeat, DispatchPID},
-			sim_loop(State);
-			
-		{chat, DispatchPID, ClientID, Target, Message} ->
-			io:format("Got chat message: ", Message),
-			sim_loop(do_chat(State, DispatchPID, ClientID, Target, Message));
-			
-		{'EXIT', FromPID} ->
+					
+		{'EXIT', _, _} ->
 			{ok}
 	end.
 
